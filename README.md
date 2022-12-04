@@ -6,10 +6,8 @@ The goal is to have values in Home Assistant so Esphome is the choice due to [AP
 
 **LIST OF MATERIAL** 
 
-MISOL wind direction sensor
+see [Wiki](https://github.com/Nik71git/ESP32-stazione-meteo/wiki) section, wiring will follow but looking at code is quite intuitive
 
-![wind_direction](https://user-images.githubusercontent.com/61212989/205518097-71500970-abfb-4297-8a95-0e9fd8b5e6c8.jpg)
+**ASSEMBLY**
 
-MISOL anemometer (wind speed)
-
-![anemometer](https://user-images.githubusercontent.com/61212989/205518109-f59e09a2-8f26-41a0-a054-587ec792ebb5.jpg)
+![assembly](https://user-images.githubusercontent.com/61212989/205520572-8e8b52ff-2852-4d28-9d31-e012adb5b7f9.png)
