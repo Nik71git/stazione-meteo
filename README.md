@@ -6,7 +6,7 @@ The goal is to have values in Home Assistant so Esphome is the choice due to [AP
 
 **LIST OF MATERIAL** 
 
-see [Wiki](https://github.com/Nik71git/ESP32-stazione-meteo/wiki) section, wiring will follow but looking at code is quite intuitive
+see [Wiki](https://github.com/Nik71git/ESP32-stazione-meteo/wiki) section, wiring will follow but looking at [code](https://github.com/Nik71git/ESP32-stazione-meteo/blob/master/stazione-meteo.yaml) is quite intuitive
 
 **ASSEMBLY**
 
