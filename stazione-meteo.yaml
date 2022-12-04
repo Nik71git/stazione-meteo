@@ -1,0 +1,413 @@
+esphome:
+  name: "stazione-meteo"
+
+esp32:
+  board: nodemcu-32s
+  framework:
+    type: arduino
+
+### enable logging
+logger:
+
+### enable Home Assistant API
+api:
+  password: !secret api_password
+
+### enable Over The Air
+ota:
+  password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+### Optional manual IP
+#  manual_ip:
+#    static_ip: 192.168.1.68
+#    gateway: 192.168.1.1
+#    subnet: 255.255.255.0 
+
+### Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "stazione-meteo-fallback"
+    password: !secret ap_password
+
+captive_portal:
+
+web_server:
+  port: 80    
+
+### I2C configuration entry
+i2c:
+   - id: bus_a
+     sda: 21
+     scl: 22
+     scan: true
+   - id: bus_b
+     sda: 13
+     scl: 16
+     scan: true
+
+switch:  
+  - platform: restart
+    name: stazione meteo restart
+    
+text_sensor:
+  - platform: version
+    name: stazione meteo esphome version
+    hide_timestamp: true    
+
+  - platform: wifi_info
+    ip_address:
+      name: stazione meteo ip address
+      icon: mdi:ip-network-outline  
+
+  - platform: template
+    name: "direzione del vento"
+    icon: 'mdi:windsock'
+    id: wind_dir_card
+
+  - platform: template
+    name: 'tipo di vento'
+    icon: 'mdi:tailwind'
+    id: wind_scale
+    update_interval: never      
+
+binary_sensor:
+      
+### sensore di connessione alla rete    
+  - platform: status
+    name: "stazione meteo"
+
+### Sensore Pioggia
+  - platform: gpio
+    pin:
+      number: GPIO19
+      mode:
+        input: true
+        pullup: true
+      inverted: true 
+    id: sensore_pioggia
+    name: sensore pioggia      
+    
+sensor:
+  - platform: wifi_signal
+    name: "stazione meteo segnale wifi" 
+    update_interval: 3600s   
+
+### sensore ms5611 per temperatura e pressione atmosferica
+  - platform: ms5611
+    i2c_id: bus_b 
+    temperature:
+      name: "Temp device "
+      id: temp_in
+    pressure:
+      name: "Pressione"
+      id: pressure
+    address: 0x77
+    update_interval: 60s  
+
+### anemometro settato in Km/h pulse_counter
+  - platform: pulse_counter
+    pin: 
+      number: GPIO26 
+      mode: 
+        input: true
+        pullup: true
+    unit_of_measurement: 'Km/h'
+    name: 'vento Km/h'
+    icon: 'mdi:weather-windy'
+    accuracy_decimals: 1
+    id: my_wind_kmh
+    count_mode:
+      rising_edge: DISABLE
+      falling_edge: INCREMENT
+    internal_filter: 10us
+    update_interval: 10s
+### la calibrazione della costante multiply avviene in base al data sheet dell'anemometro
+### quindi un vento di 2,4 km/h genera un impulso ogni secondo, siccome pulse_counter conta gli impulsi al minuto
+### la formula è: [2,4 km/h * (impulsi al minuto/60)]
+### quindi [2.4 * (1/60)]  = 0,04
+    filters:
+      - multiply: 0.04
+      - sliding_window_moving_average:
+          window_size: 10 #(ogni quante letture fa la media)
+          send_every: 10 #(fornisce il dato dopo X letture medie)
+
+### Scala di Beaufort per il tipo di vento    
+  - platform: template
+    #name: 'Windspeed' 
+    icon: 'mdi:weather-windy'
+    id: wind_meter_avg
+    lambda: return id(my_wind_kmh).state;
+    unit_of_measurement: 'km/h'
+    update_interval: 5s
+    filters:
+      - throttle_average: 5s
+    on_value:
+      lambda: |-
+       if (id(wind_meter_avg).state < 1) {
+         id(wind_scale).publish_state("aria calma");
+       } else if (id(wind_meter_avg).state > 0 && id(wind_meter_avg).state < 4) {
+         id(wind_scale).publish_state("aria leggera");
+       } else if (id(wind_meter_avg).state > 3 && id(wind_meter_avg).state < 8) {
+         id(wind_scale).publish_state("brezza leggera");
+       } else if (id(wind_meter_avg).state > 7 && id(wind_meter_avg).state < 13) {
+         id(wind_scale).publish_state("brezza gentile");
+       } else if (id(wind_meter_avg).state > 12 && id(wind_meter_avg).state < 19) {
+         id(wind_scale).publish_state("brezza moderata");
+       } else if (id(wind_meter_avg).state > 18 && id(wind_meter_avg).state < 25) {
+         id(wind_scale).publish_state("brezza fresca");
+       } else if (id(wind_meter_avg).state > 24 && id(wind_meter_avg).state < 32) {
+         id(wind_scale).publish_state("brezza forte");
+       } else if (id(wind_meter_avg).state > 31 && id(wind_meter_avg).state < 39) {
+         id(wind_scale).publish_state("quasi burrasca");
+       } else if (id(wind_meter_avg).state > 38 && id(wind_meter_avg).state < 47) {
+         id(wind_scale).publish_state("burrasca");
+       } else if (id(wind_meter_avg).state > 46 && id(wind_meter_avg).state < 55) {
+         id(wind_scale).publish_state("burrasca forte");
+       } else if (id(wind_meter_avg).state > 54 && id(wind_meter_avg).state < 64) {
+        id(wind_scale).publish_state("tempesta");
+       } else if (id(wind_meter_avg).state > 63 && id(wind_meter_avg).state < 73) {
+         id(wind_scale).publish_state("tempesta violenta");
+       } else if (id(wind_meter_avg).state > 72) {
+         id(wind_scale).publish_state("uragano");
+       } else {
+         id(wind_scale).publish_state("");
+       }    
+
+### sensore direzione del vento
+  - platform: adc
+    id: adc_sensor
+    pin: GPIO32
+    name: ADC
+    internal: true
+    update_interval: 90s
+    filters:
+      # - multiply: 3.3 ### settaggio per il Wemos D1 che non legge valori > 1.0V
+      # - multiply: 0.0009775171 ### risultato di 1/1023 per avere il valore analogico da 0 a 1024
+    accuracy_decimals: 3 ### IMPORTANT to get resolution for resistance sensor
+    
+#### Direzione cardinale
+#### settare i valori in base all'installazione! mettere 0 a nord
+## Direzione -- Resistenza -- ADC Voltaggio
+## N -- 3132Ω -- 0.79v
+## NE -- 1643Ω -- 0.47v
+## E -- 292Ω -- 0.10v
+## SE -- 602Ω -- 0.19v
+## S -- 974Ω -- 0.29v
+## SW -- 2372Ω -- 0.63v
+## W -- 3997Ω -- 0.94v
+## NW -- 3657Ω -- 0.88v
+  - platform: resistance
+    sensor: adc_sensor
+    id: resistance_sensor
+    configuration: DOWNSTREAM
+    resistor: 10kOhm
+    internal: true
+    name: Resistance Sensor
+    accuracy_decimals: 1
+    filters:
+      - heartbeat: 90s ### thinking of increasing interval to plot better
+    on_value:
+      - if:
+          condition:
+            sensor.in_range:
+              id: resistance_sensor
+              above: 3100
+              below: 3200
+          then:
+            - text_sensor.template.publish:
+                id: wind_dir_card
+                state: "Nord"
+            - sensor.template.publish:
+                id: wind_heading
+                state: 0.0
+      - if:
+          condition:
+            sensor.in_range:
+              id: resistance_sensor
+              above: 1600
+              below: 1700
+          then:
+            - text_sensor.template.publish:
+                id: wind_dir_card
+                state: "Nord-Est"         
+            - sensor.template.publish:
+                id: wind_heading
+                state: 45.0            
+      - if:
+          condition:
+            sensor.in_range:
+              id: resistance_sensor
+              above: 250
+              below: 350
+          then:
+            - text_sensor.template.publish:
+                id: wind_dir_card
+                state: "Est"                
+            - sensor.template.publish:
+                id: wind_heading
+                state: 90.0          
+      - if:
+          condition:
+            sensor.in_range:
+              id: resistance_sensor
+              above: 550
+              below: 650
+          then:
+            - text_sensor.template.publish:
+                id: wind_dir_card
+                state: "Sud-Est"    
+            - sensor.template.publish:
+                id: wind_heading
+                state: 135.0             
+      - if:
+          condition:
+            sensor.in_range:
+              id: resistance_sensor
+              above: 900
+              below: 1100
+          then:
+            - text_sensor.template.publish:
+                id: wind_dir_card
+                state: "Sud"    
+            - sensor.template.publish:
+                id: wind_heading
+                state: 180.0            
+      - if:
+          condition:
+            sensor.in_range:
+              id: resistance_sensor
+              above: 2300
+              below: 2450
+          then:
+            - text_sensor.template.publish:
+                id: wind_dir_card
+                state: "Sud-Ovest"    
+            - sensor.template.publish:
+                id: wind_heading
+                state: 225.0              
+      - if:
+          condition:
+            sensor.in_range:
+              id: resistance_sensor
+              above: 3900
+              below: 4100
+          then:
+            - text_sensor.template.publish:
+                id: wind_dir_card
+                state: "Ovest"    
+            - sensor.template.publish:
+                id: wind_heading
+                state: 270.0          
+      - if:
+          condition:
+            sensor.in_range:
+              id: resistance_sensor
+              above: 3500
+              below: 3800
+          then:
+            - text_sensor.template.publish:
+                id: wind_dir_card
+                state: "Nord-Ovest"    
+            - sensor.template.publish:
+                id: wind_heading
+                state: 315.0
+
+  - platform: template
+    name: "Wind Heading"
+    id: wind_heading
+    unit_of_measurement: "°"
+    internal: true
+
+#### sensore temperatura ed umidità DHT22
+  - platform: dht
+    pin: 
+      number: GPIO27 
+      #inverted: true
+      mode:
+        input: true
+        pullup: true
+    temperature:
+      name: "temperatura esterna"
+      id: temp_out
+    humidity:
+      name: "umidita esterna"
+      id: humidity
+    update_interval: 120s
+    model: DHT22
+
+#### sensore quantità pioggia istantanea come pulse counter          
+  - platform: pulse_counter
+    pin: 
+      number: GPIO17
+      mode:
+        input: true
+        pullup: true
+    unit_of_measurement: 'mm'
+    name: 'quantità pioggia'
+    icon: 'mdi:weather-rainy'
+    id: my_rain
+    count_mode:
+      rising_edge: INCREMENT
+      falling_edge: DISABLE
+    internal_filter: 10us
+    update_interval: 10s
+    filters:
+      ### verificare nel datasheet il valore corretto per la calibrazione
+#      - multiply: 0.367
+      - multiply: 0.279
+
+### integrazione per calcolare la pioggia caduta nell'ultima ora
+  - platform: integration
+    name: "quantità pioggia ora"
+    id: rain_per_hour
+    time_unit: h
+    unit_of_measurement: 'mm'
+    icon: 'mdi:weather-rainy'
+    sensor: my_rain
+    accuracy_decimals: 2
+    filters:
+      - multiply: 60
+
+### contatore per calcolare la pioggia caduta nelle ultime 24 ore (0-24) 
+  - platform: total_daily_energy
+    name: "quantità pioggia giorno"
+    power_id: my_rain
+    unit_of_measurement: 'mm'
+    icon: 'mdi:weather-rainy'
+    accuracy_decimals: 2
+  # x60 To convert to aggregated rain amount
+    filters:
+      - multiply: 60
+
+time:
+  - platform: sntp
+    timezone: "Europe/Rome"
+    on_time:
+      - seconds: 0
+        minutes: 0
+        hours: '*' # ogni ora
+        then:
+          - sensor.integration.reset: rain_per_hour
+
+### gestione display ssd1306
+font:
+  ### font scaricati in locale
+  - file: "fonts/16021_FUTURAMC.ttf"
+    id: futura_font
+    size: 25
+
+  ### font Google online, gfonts://family[@weight]
+  - file: "gfonts://Roboto"
+    id: roboto
+    size: 20
+  
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    i2c_id: bus_a
+    address: 0x3C
+    lambda: |-
+      it.printf(5, 0, id(futura_font), "in: %.1f °C", id(temp_in).state);
+      it.printf(5, 30, id(futura_font), "out: %.1f °C", id(temp_out).state);
