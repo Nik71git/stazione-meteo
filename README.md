@@ -30,3 +30,11 @@ Same for wind direction and rain gauge, wind direction is the most complex to ca
 ### _external hardware:_
 
 > ![assembly](https://user-images.githubusercontent.com/61212989/205520572-8e8b52ff-2852-4d28-9d31-e012adb5b7f9.png)
+
+### _Home Assistant card:_
+
+![ha card](https://user-images.githubusercontent.com/61212989/206812303-9b93984f-9bf5-47a5-bd2c-6e04518c3c79.png)
+
+### _ESPHome dashboard:_
+
+![esphome](https://user-images.githubusercontent.com/61212989/206812558-e9c91bdb-af96-4644-8606-49e069afe541.png)
