@@ -1,4 +1,4 @@
-# **ESP32 WEATHER STATION**
+#ESP32 WEATHER STATION
 
 Welcome to my DIY weather station project based on ESP32, MISOL sensors for wind measurement and rain quantitative, Kemo M152K capacitive sensor for rain detection and DHT22 for temperature and humidity; you can find a lot of similar projects on the web and this is my simple contribution to them.
 
