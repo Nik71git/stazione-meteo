@@ -92,7 +92,7 @@ binary_sensor:
 sensor:
   - platform: wifi_signal
     name: "stazione meteo segnale wifi" 
-    update_interval: 3600s   
+    update_interval: 3600s
 
 ### sensore ms5611 per temperatura e pressione atmosferica
   - platform: ms5611
@@ -104,7 +104,7 @@ sensor:
       name: "Pressione"
       id: pressure
     address: 0x77
-    update_interval: 60s  
+    update_interval: 120s  
 
 ### anemometro settato in Km/h pulse_counter
   - platform: pulse_counter
@@ -140,9 +140,9 @@ sensor:
     id: wind_meter_avg
     lambda: return id(my_wind_kmh).state;
     unit_of_measurement: 'km/h'
-    update_interval: 5s
+    update_interval: 10s
     filters:
-      - throttle_average: 5s
+      - throttle_average: 10s
     on_value:
       lambda: |-
        if (id(wind_meter_avg).state < 1) {
@@ -166,7 +166,7 @@ sensor:
        } else if (id(wind_meter_avg).state > 46 && id(wind_meter_avg).state < 55) {
          id(wind_scale).publish_state("burrasca forte");
        } else if (id(wind_meter_avg).state > 54 && id(wind_meter_avg).state < 64) {
-        id(wind_scale).publish_state("tempesta");
+         id(wind_scale).publish_state("tempesta");
        } else if (id(wind_meter_avg).state > 63 && id(wind_meter_avg).state < 73) {
          id(wind_scale).publish_state("tempesta violenta");
        } else if (id(wind_meter_avg).state > 72) {
@@ -181,14 +181,14 @@ sensor:
     pin: GPIO32
     name: ADC
     internal: true
-    update_interval: 90s
+    update_interval: 120s
     filters:
       # - multiply: 3.3 ### settaggio per il Wemos D1 che non legge valori > 1.0V
       # - multiply: 0.0009775171 ### risultato di 1/1023 per avere il valore analogico da 0 a 1024
     accuracy_decimals: 3 ### IMPORTANT to get resolution for resistance sensor
     
 #### Direzione cardinale
-#### settare i valori in base all'installazione! mettere 0 a nord
+#### settare i valori in base all'installazione! mettere la punta a nord tra 3100 e 3200 ohm
 ## Direzione -- Resistenza -- ADC Voltaggio
 ## N -- 3132Ω -- 0.79v
 ## NE -- 1643Ω -- 0.47v
@@ -207,7 +207,7 @@ sensor:
     name: Resistance Sensor
     accuracy_decimals: 1
     filters:
-      - heartbeat: 90s ### thinking of increasing interval to plot better
+      - heartbeat: 120s ### legge il sensore ogni 2 minuti e invia il valore che trova allo scadere del secondo minuto 
     on_value:
       - if:
           condition:
