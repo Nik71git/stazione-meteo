@@ -1,0 +1,50 @@
+# Device esp8266 Basic Configuration
+esphome:
+  name: $devicename
+
+esp8266:
+  board: $board
+  framework:
+    version: recommended
+
+# Enable logging
+logger:
+
+#web_server: #disabled since it need a lot of device memory and can lead problems on 8266
+#  port: 80
+
+# Enable Home Assistant API
+api:
+  password: !secret api_password
+
+ota:
+  password: !secret ota_password
+
+binary_sensor:
+  - platform: status
+    name: "$devicename stato"
+  
+text_sensor:
+  - platform: version
+    name: "$devicename esphome version"
+    hide_timestamp: true    
+
+  - platform: wifi_info
+    ip_address:
+      name: "$devicename ip address"
+      icon: mdi:ip-network-outline
+
+sensor:
+  - platform: wifi_signal
+    name: "$devicename segnale WiFi"
+    update_interval: 3600s    
+
+switch:
+  - platform: restart
+    name: "$devicename restart"
+    
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Rome
+    servers: 192.168.1.1     

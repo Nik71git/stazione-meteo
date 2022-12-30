@@ -1,0 +1,23 @@
+# device wifi basic configuration
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ## optional manual IP 
+  #  manual_ip:
+  #    static_ip: $ip_address
+  #    gateway: 192.168.1.1
+  #    subnet: 255.255.255.0
+  fast_connect: true 
+
+# Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: $devicename fallback hotspot
+    password: !secret ap_password
+  ## optional manual IP 
+  # manual_ip:
+  #   static_ip: $ip_address
+  #   gateway: 192.168.1.1
+  #   subnet: 255.255.255.0
+    fast_connect: true 
+
+captive_portal:
