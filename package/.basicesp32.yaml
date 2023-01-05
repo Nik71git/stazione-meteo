@@ -1,4 +1,4 @@
-# Device ESP32 Basic Configuration
+ Device ESP32 Basic Configuration
 esphome:
   name: $devicename
 

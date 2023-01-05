@@ -21,10 +21,6 @@ i2c:
     scl: 16
     scan: true
 
-switch:  
-  - platform: restart
-    name: stazione meteo restart
-    
 text_sensor:
   - platform: template
     name: "direzione del vento"
@@ -51,10 +47,7 @@ binary_sensor:
     name: sensore pioggia      
     
 sensor:
-  - platform: wifi_signal
-    name: "stazione meteo segnale wifi" 
-    update_interval: 3600s
-
+  
 ### sensore ms5611 per temperatura e pressione atmosferica
   - platform: ms5611
     i2c_id: bus_b 
@@ -344,7 +337,6 @@ sensor:
 
 time:
   - platform: sntp
-    timezone: "Europe/Rome"
     on_time:
       - seconds: 0
         minutes: 0
