@@ -3,9 +3,6 @@ substitutions:
   board: nodemcu-32s
   static_ip: 192.168.1.5
 
-wifi:
-  use_address: stazione-meteo.local
-
 packages:
   device_base: !include .basicesp32.yaml
   wifi: !include .wifi.yaml 
