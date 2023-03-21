@@ -40,4 +40,10 @@ time:
   - platform: sntp
     id: sntp_time
     timezone: Europe/Rome
-    servers: 192.168.1.1    
+    servers: 192.168.1.1
+
+sensor:
+  - platform: internal_temperature
+    name: "temp esp"    
+    update_interval: 120s
+    id: temp_esp

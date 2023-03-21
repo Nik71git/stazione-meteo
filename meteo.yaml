@@ -52,8 +52,8 @@ sensor:
   - platform: ms5611
     i2c_id: bus_b 
     temperature:
-      name: "Temp device "
-      id: temp_in
+      name: "temp device "
+      id: temp_device
     pressure:
       name: "Pressione"
       id: pressure
@@ -349,7 +349,7 @@ font:
   ### font scaricati in locale
   - file: "fonts/16021_FUTURAMC.ttf"
     id: futura_font
-    size: 25
+    size: 20
 
   ### font Google online, gfonts://family[@weight]
   - file: "gfonts://Roboto"
@@ -362,5 +362,6 @@ display:
     i2c_id: bus_a
     address: 0x3C
     lambda: |-
-      it.printf(5, 0, id(futura_font), "in: %.1f °C", id(temp_in).state);
-      it.printf(5, 30, id(futura_font), "out: %.1f °C", id(temp_out).state);
+      it.printf(5,  0, id(futura_font), "ESP: %.1 °C", id(temp_esp).state);
+      it.printf(5, 20, id(futura_font), "in: %.1f °C", id(temp_device).state);
+      it.printf(5, 40, id(futura_font), "out: %.1f °C", id(temp_out).state);
