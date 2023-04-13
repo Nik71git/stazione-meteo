@@ -52,7 +52,7 @@ sensor:
   - platform: ms5611
     i2c_id: bus_b 
     temperature:
-      name: "temp device "
+      name: "temp hardware"
       id: temp_device
     pressure:
       name: "Pressione"
@@ -61,29 +61,53 @@ sensor:
     update_interval: 120s  
 
 ### anemometro settato in Km/h pulse_counter
-  - platform: pulse_counter
-    pin: 
-      number: GPIO26 
-      mode: 
+#  - platform: pulse_counter
+#    pin: 
+#      number: GPIO26 
+#      mode: 
+#        input: true
+#        pullup: true
+#    unit_of_measurement: 'Km/h'
+#    name: 'vento Km/h'
+#    icon: 'mdi:weather-windy'
+#    accuracy_decimals: 1
+#    id: my_wind_kmh
+#    count_mode:
+#      rising_edge: DISABLE
+#      falling_edge: INCREMENT
+#    internal_filter: 10us
+#    update_interval: 10s
+### la calibrazione della costante multiply avviene in base al data sheet dell'anemometro
+### quindi un vento di 2,4 km/h genera un impulso ogni secondo, siccome pulse_counter conta gli impulsi al minuto
+### la formula è: [2,4 km/h * (impulsi al minuto/60)]
+### quindi [2.4 * (1/60)]  = 0,04
+#    filters:
+#      - multiply: 0.04
+#      - sliding_window_moving_average:
+#          window_size: 10 #(ogni quante letture fa la media)
+#          send_every: 10 #(fornisce il dato dopo X letture medie)
+
+### anemometro settato in Km/h pulse_meter
+  - platform: pulse_meter
+    pin:
+      number: GPIO26
+      mode:
         input: true
-        pullup: true
-    unit_of_measurement: 'Km/h'
-    name: 'vento Km/h'
+        pullup: true  
+    unit_of_measurement: 'km/h'
+    name: "vento Km/h"
     icon: 'mdi:weather-windy'
     accuracy_decimals: 1
     id: my_wind_kmh
-    count_mode:
-      rising_edge: DISABLE
-      falling_edge: INCREMENT
-    internal_filter: 10us
-    update_interval: 10s
+    timeout: '5s'
+    internal_filter: 10 ms
 ### la calibrazione della costante multiply avviene in base al data sheet dell'anemometro
 ### quindi un vento di 2,4 km/h genera un impulso ogni secondo, siccome pulse_counter conta gli impulsi al minuto
 ### la formula è: [2,4 km/h * (impulsi al minuto/60)]
 ### quindi [2.4 * (1/60)]  = 0,04
     filters:
-      - multiply: 0.04
-      - sliding_window_moving_average:
+    - multiply: 0.04 
+    - sliding_window_moving_average:
           window_size: 10 #(ogni quante letture fa la media)
           send_every: 10 #(fornisce il dato dopo X letture medie)
 
@@ -289,7 +313,7 @@ sensor:
       name: "umidita esterna"
       id: humidity
     update_interval: 120s
-    model: DHT22
+    #model: DHT22
 
 #### sensore quantità pioggia istantanea come pulse counter          
   - platform: pulse_counter
@@ -362,6 +386,6 @@ display:
     i2c_id: bus_a
     address: 0x3C
     lambda: |-
-      it.printf(5,  0, id(futura_font), "ESP: %.1 °C", id(temp_esp).state);
+      it.printf(5,  0, id(futura_font), "esp: %.1f °C", id(temp_esp).state);
       it.printf(5, 20, id(futura_font), "in: %.1f °C", id(temp_device).state);
       it.printf(5, 40, id(futura_font), "out: %.1f °C", id(temp_out).state);
