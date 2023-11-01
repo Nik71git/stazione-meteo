@@ -1,7 +1,7 @@
 substitutions:
   devicename: meteo
   board: nodemcu-32s
-  static_ip: 192.168.1.5
+  static_ip: 192.168.1.15
 
 packages:
   device_base: !include .basicesp32.yaml
@@ -15,10 +15,12 @@ i2c:
   - id: bus_a
     sda: 21
     scl: 22
+    frequency: 400khz
     scan: true
   - id: bus_b
     sda: 13
     scl: 16
+    frequency: 400khz
     scan: true
 
 text_sensor:
@@ -379,12 +381,14 @@ font:
   - file: "gfonts://Roboto"
     id: roboto
     size: 20
-  
+
+
 display:
   - platform: ssd1306_i2c
     model: "SSD1306 128x64"
     i2c_id: bus_a
     address: 0x3C
+    update_interval: 5s
     lambda: |-
       it.printf(5,  0, id(futura_font), "esp: %.1f °C", id(temp_esp).state);
       it.printf(5, 20, id(futura_font), "in: %.1f °C", id(temp_device).state);
