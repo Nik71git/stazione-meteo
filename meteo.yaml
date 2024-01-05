@@ -13,13 +13,17 @@ web_server:
 ### I2C configuration entry
 i2c:
   - id: bus_a
-    sda: 21
-    scl: 22
+    sda:
+      number: 21
+    scl:
+      number: 22
     frequency: 400khz
     scan: true
   - id: bus_b
-    sda: 13
-    scl: 16
+    sda:
+      number: 13
+    scl:
+      number: 16
     frequency: 400khz
     scan: true
 
@@ -158,7 +162,8 @@ sensor:
 ### sensore direzione del vento
   - platform: adc
     id: adc_sensor
-    pin: GPIO32
+    pin: 
+      number: GPIO32
     name: ADC
     internal: true
     update_interval: 120s
