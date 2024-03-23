@@ -6,11 +6,11 @@ wifi:
     gateway: 192.168.1.1
     subnet: 255.255.255.0
     dns1: 192.168.1.100
-    #dns2: 8.8.4.4  
+    dns2: 8.8.8.8  
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap: {}
-  domain: .local
+  domain: .fritz.box
   reboot_timeout: 30min
   fast_connect: true
 
@@ -29,3 +29,6 @@ sensor:
   - platform: wifi_signal
     name: "$devicename segnale WiFi"
     update_interval: 3600s    
+  - platform: uptime
+    name: ${devicename} uptime
+
