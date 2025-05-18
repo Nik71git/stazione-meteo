@@ -339,12 +339,17 @@ sensor:
     accuracy_decimals: 2
     filters:
       - multiply: 0.2794
+    on_value:
+      then:
+        - lambda: |-
+            // Aggiungi la pioggia di questo minuto al totale giornaliero
+            id(daily_rain_total) += (x / 60.0);  
 
 ### integrazione per calcolare la pioggia caduta nell'ultima ora
   - platform: integration
     name: "pioggia ultima ora"
     sensor: my_rain
-    id: rain_per_hour
+    #id: rain_per_hour
     time_unit: h
     unit_of_measurement: 'mm'
     icon: 'mdi:weather-rainy'
