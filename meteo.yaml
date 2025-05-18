@@ -1,7 +1,7 @@
 substitutions:
   devicename: meteo
   board: nodemcu-32s
-  static_ip: 192.168.1.15
+  static_ip: 192.168.178.226
 
 packages:
   device_base: !include .basicesp32.yaml
@@ -103,6 +103,8 @@ sensor:
     unit_of_measurement: 'km/h'
     name: "vento Km/h"
     icon: 'mdi:weather-windy'
+    device_class: wind_speed  
+    state_class: measurement
     accuracy_decimals: 1
     id: my_wind_kmh
     timeout: '5s'
@@ -188,7 +190,7 @@ sensor:
     id: resistance_sensor
     configuration: DOWNSTREAM
     resistor: 10kOhm
-    internal: true
+    internal: true    
     name: Resistance Sensor
     accuracy_decimals: 1
     filters:
@@ -329,51 +331,53 @@ sensor:
       mode:
         input: true
         pullup: true
-    unit_of_measurement: 'mm'
     name: 'quantità pioggia'
     icon: 'mdi:weather-rainy'
     id: my_rain
-    count_mode:
-      rising_edge: INCREMENT
-      falling_edge: DISABLE
-    internal_filter: 10us
-    update_interval: 10s
+    update_interval: 60s
+    unit_of_measurement: 'mm/min'
+    accuracy_decimals: 2
     filters:
-      ### verificare nel datasheet il valore corretto per la calibrazione
-#      - multiply: 0.367
-      - multiply: 0.279
+      - multiply: 0.2794
 
 ### integrazione per calcolare la pioggia caduta nell'ultima ora
   - platform: integration
-    name: "quantità pioggia ora"
+    name: "pioggia ultima ora"
+    sensor: my_rain
     id: rain_per_hour
     time_unit: h
     unit_of_measurement: 'mm'
     icon: 'mdi:weather-rainy'
-    sensor: my_rain
     accuracy_decimals: 2
-    filters:
-      - multiply: 60
 
 ### contatore per calcolare la pioggia caduta nelle ultime 24 ore (0-24) 
-  - platform: total_daily_energy
-    name: "quantità pioggia giorno"
-    power_id: my_rain
+  - platform: template
+    name: "Pioggia Giornaliera"
+    id: rain_daily
     unit_of_measurement: 'mm'
-    icon: 'mdi:weather-rainy'
     accuracy_decimals: 2
-  # x60 To convert to aggregated rain amount
-    filters:
-      - multiply: 60
+    icon: 'mdi:weather-pouring'
+    update_interval: 60s
+    lambda: |-
+      id(daily_rain_total) += id(my_rain).state / 60.0;
+      return id(daily_rain_total);
+
+### azzerare il contatore giornaliero a mezzanotte
+globals:
+  - id: daily_rain_total
+    type: float
+    restore_value: no
+    initial_value: '0'  
 
 time:
   - platform: sntp
     on_time:
       - seconds: 0
         minutes: 0
-        hours: '*' # ogni ora
+        hours: 0
         then:
-          - sensor.integration.reset: rain_per_hour
+          - lambda: |-
+               id(daily_rain_total) = 0;          
 
 ### gestione display ssd1306
 font:
@@ -387,7 +391,6 @@ font:
     id: roboto
     size: 20
 
-
 display:
   - platform: ssd1306_i2c
     model: "SSD1306 128x64"
@@ -398,3 +401,4 @@ display:
       it.printf(5,  0, id(futura_font), "esp: %.1f °C", id(temp_esp).state);
       it.printf(5, 20, id(futura_font), "in: %.1f °C", id(temp_device).state);
       it.printf(5, 40, id(futura_font), "out: %.1f °C", id(temp_out).state);
+

@@ -1,10 +1,10 @@
 mqtt:
-  broker: 192.168.1.7
+  broker: 192.168.178.10
   port: 1883
   username: !secret mqtt_user
   password: !secret mqtt_password     
   topic_prefix: meteo
-  discovery_prefix: test/meteo
+  discovery_prefix: meteo
   discovery: true
   discovery_retain: true
   reboot_timeout: 30min
