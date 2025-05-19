@@ -11,7 +11,7 @@ wifi:
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap: {}
   domain: .local #default for mDNS, se si usa DHCP è possibile cambiarlo
-  reboot_timeout: 30min
+  reboot_timeout: 10min
   fast_connect: true
 
 captive_portal:
