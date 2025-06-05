@@ -10,7 +10,6 @@ packages:
 web_server:
   port: 80  
 
-### I2C configuration entry
 i2c:
   - id: bus_a
     sda:
@@ -41,7 +40,10 @@ text_sensor:
 
 binary_sensor:
 
+### ===============
 ### Sensore Pioggia
+### ===============
+
   - platform: gpio
     pin:
       number: GPIO19
@@ -53,8 +55,11 @@ binary_sensor:
     name: sensore pioggia      
     
 sensor:
-  
+
+### ======================================================  
 ### sensore ms5611 per temperatura e pressione atmosferica
+### ======================================================
+
   - platform: ms5611
     i2c_id: bus_b 
     temperature:
@@ -66,34 +71,11 @@ sensor:
     address: 0x77
     update_interval: 120s  
 
-### anemometro settato in Km/h pulse_counter
-#  - platform: pulse_counter
-#    pin: 
-#      number: GPIO26 
-#      mode: 
-#        input: true
-#        pullup: true
-#    unit_of_measurement: 'Km/h'
-#    name: 'vento Km/h'
-#    icon: 'mdi:weather-windy'
-#    accuracy_decimals: 1
-#    id: my_wind_kmh
-#    count_mode:
-#      rising_edge: DISABLE
-#      falling_edge: INCREMENT
-#    internal_filter: 10us
-#    update_interval: 10s
-### la calibrazione della costante multiply avviene in base al data sheet dell'anemometro
-### quindi un vento di 2,4 km/h genera un impulso ogni secondo, siccome pulse_counter conta gli impulsi al minuto
-### la formula è: [2,4 km/h * (impulsi al minuto/60)]
-### quindi [2.4 * (1/60)]  = 0,04
-#    filters:
-#      - multiply: 0.04
-#      - sliding_window_moving_average:
-#          window_size: 10 #(ogni quante letture fa la media)
-#          send_every: 10 #(fornisce il dato dopo X letture medie)
-
+### ======================================
 ### anemometro settato in Km/h pulse_meter
+### ======================================
+
+### velocità istantanea
   - platform: pulse_meter
     pin:
       number: GPIO26
@@ -101,23 +83,40 @@ sensor:
         input: true
         pullup: true  
     unit_of_measurement: 'km/h'
-    name: "vento Km/h"
+    name: "velocità vento istantanea"
     icon: 'mdi:weather-windy'
     device_class: wind_speed  
     state_class: measurement
     accuracy_decimals: 1
-    id: my_wind_kmh
-    timeout: '5s'
+    id: my_wind_kmh    
     internal_filter: 10 ms
-### la calibrazione della costante multiply avviene in base al data sheet dell'anemometro
-### quindi un vento di 2,4 km/h genera un impulso ogni secondo, siccome pulse_counter conta gli impulsi al minuto
-### la formula è: [2,4 km/h * (impulsi al minuto/60)]
-### quindi [2.4 * (1/60)]  = 0,04
     filters:
-    - multiply: 0.04 
-    - sliding_window_moving_average:
-          window_size: 10 #(ogni quante letture fa la media)
-          send_every: 10 #(fornisce il dato dopo X letture medie)
+    #- multiply: 1.224 
+    - multiply: 0.04
+    - debounce: 0.1s
+
+# Velocità media su 2 minuti (moving average)
+  - platform: copy
+    source_id: my_wind_kmh
+    name: "velocità vento media (2 min)"
+    unit_of_measurement: "km/h"
+    icon: 'mdi:weather-windy-variant'
+    accuracy_decimals: 1
+    filters:
+      - sliding_window_moving_average:
+          window_size: 60  # 2 minuti con update_interval: 2s
+          send_every: 10   # ogni 20 secondi invia un valore aggiornato
+
+# Raffica massima (ultimi 10s)
+  - platform: copy
+    source_id: my_wind_kmh
+    name: "raffica di vento (ultimi 10s)"
+    icon: 'mdi:speedometer'
+    unit_of_measurement: "km/h"
+    accuracy_decimals: 1
+    filters:
+      - max:
+          window_size: 5  # aggiorna ogni 10s
 
 ### Scala di Beaufort per il tipo di vento    
   - platform: template
@@ -160,8 +159,10 @@ sensor:
        } else {
          id(wind_scale).publish_state("");
        }    
-
+### ===========================
 ### sensore direzione del vento
+### ===========================
+
   - platform: adc
     id: adc_sensor
     pin: 
@@ -307,7 +308,10 @@ sensor:
     unit_of_measurement: "°"
     internal: true
 
-#### sensore temperatura ed umidità DHT22
+### ====================================
+### sensore temperatura ed umidità DHT22
+### ====================================
+
   - platform: dht
     pin: 
       number: GPIO27 
@@ -324,7 +328,11 @@ sensor:
     update_interval: 120s
     #model: DHT22
 
-#### sensore quantità pioggia istantanea come pulse counter          
+### ===================
+### sensore pluviometro
+### ===================
+
+### sensore quantità pioggia istantanea come pulse counter          
   - platform: pulse_counter
     pin: 
       number: GPIO17
@@ -357,7 +365,7 @@ sensor:
 
 ### contatore per calcolare la pioggia caduta nelle ultime 24 ore (0-24) 
   - platform: template
-    name: "Pioggia Giornaliera"
+    name: "pioggia giornaliera"
     id: rain_daily
     unit_of_measurement: 'mm'
     accuracy_decimals: 2
@@ -384,7 +392,10 @@ time:
           - lambda: |-
                id(daily_rain_total) = 0;          
 
+### ========================
 ### gestione display ssd1306
+### ========================
+
 font:
   ### font scaricati in locale
   - file: "fonts/16021_FUTURAMC.ttf"
