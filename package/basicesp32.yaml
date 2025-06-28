@@ -5,7 +5,8 @@ esphome:
 esp32:
   board: $board
   framework:
-    type: arduino
+    #type: arduino # va bene per tutti gli usi eccetto BLE proxy e tracker
+    type: esp-idf # usare con BLE tracker
     version: recommended
 
 preferences:

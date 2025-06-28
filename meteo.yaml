@@ -6,9 +6,29 @@ substitutions:
 packages:
   device_base: !include .basicesp32.yaml
   wifi: !include .wifi.yaml 
+  
+#web_server:
+#  port: 80
 
-web_server:
-  port: 80  
+### =========================
+### Bluetooth to wifi gateway
+### =========================
+esp32_ble_tracker:
+  max_connections: 3
+  scan_parameters: 
+    active: false #solo se si usano i Mi Flora
+    interval: 320ms #valori di default da usare per stabilità wifi
+    window: 30ms #valori di default da usare per stabilità wifi
+    #software_coexistence: true
+  id: esp32blehub 
+
+### ===============
+### Bluetooth proxy
+### ===============
+bluetooth_proxy:
+  active: true
+  cache_services: true
+  connection_slots: 3  
 
 i2c:
   - id: bus_a
@@ -56,9 +76,39 @@ binary_sensor:
     
 sensor:
 
-### ======================================================  
-### sensore ms5611 per temperatura e pressione atmosferica
-### ======================================================
+### ==================
+###  sensori Mi Flora
+### ==================
+
+  - platform: xiaomi_hhccjcy01
+    mac_address: 5C:85:7E:13:90:3A
+    temperature:
+      name: "ortensie temperatura"
+    moisture:
+      name: "ortensie umidità"
+    illuminance:
+      name: "ortensie illuminazione"
+    conductivity:
+      name: "ortensie fertilità"
+    battery_level:
+      name: "ortensie batteria"
+
+  - platform: xiaomi_hhccjcy01
+    mac_address: 5C:85:7E:13:8C:EC
+    temperature:
+      name: "acero temperatura"
+    moisture:
+      name: "acero umidità"
+    illuminance:
+      name: "acero illuminazione"
+    conductivity:
+      name: "acero fertilità"
+    battery_level:
+      name: "acero batteria"
+
+### ===========================================================  
+### sensore ms5611 per temperatura ESP e pressione atmosferica
+### ===========================================================
 
   - platform: ms5611
     i2c_id: bus_b 
@@ -397,7 +447,7 @@ time:
 ### ========================
 
 font:
-  ### font scaricati in locale
+   ### font scaricati in locale
   - file: "fonts/16021_FUTURAMC.ttf"
     id: futura_font
     size: 20
