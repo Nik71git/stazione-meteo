@@ -1,6 +1,8 @@
 # Device ESP32 Basic Configuration
 esphome:
   name: $devicename
+  friendly_name: $ha_name
+  area: $ha_area
 
 esp32:
   board: $board
@@ -27,16 +29,19 @@ ota:
 
 binary_sensor:
   - platform: status
-    name: "$devicename stato"
+    id: stato 
+    name: "stato"
   
 text_sensor:
   - platform: version
-    name: "$devicename esphome version"
+    id: esphome_version 
+    name: "esphome version"
     hide_timestamp: true    
 
 switch:
   - platform: restart
-    name: "$devicename restart"
+    id: restart_switch
+    name: "restart"
     
 time:
   - platform: sntp
@@ -46,6 +51,7 @@ time:
 
 sensor:
   - platform: internal_temperature
-    name: "temp esp"    
-    update_interval: 120s
     id: temp_esp
+    name: "temperatura chip"    
+    update_interval: 120s
+    

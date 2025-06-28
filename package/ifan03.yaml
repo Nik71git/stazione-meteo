@@ -1,0 +1,103 @@
+output:
+  - platform: gpio
+    pin: 
+      number: GPIO9
+    id: light_output
+    inverted: true
+
+light:
+  - platform: binary
+    id: $ifan_light
+    name: "$ifan_light"
+    output: light_output
+    
+    restore_mode: always_off  
+
+switch:
+  - platform: gpio
+    pin: 
+      number: GPIO14
+    id: $fan_relay1
+    name: "$fan_relay1"
+    icon: mdi:fan-speed-1
+    interlock: [$fan_relay2, $fan_relay3]
+    restore_mode: always_off          
+    
+  - platform: gpio
+    pin: 
+      number: GPIO12
+    id: $fan_relay2  
+    name: "$fan_relay2"
+    icon: mdi:fan-speed-2
+    interlock: [$fan_relay1, $fan_relay3]
+    restore_mode: always_off          
+    
+  - platform: gpio
+    pin: 
+      number: GPIO15
+    id: $fan_relay3  
+    name: "$fan_relay3"    
+    icon: mdi:fan-speed-3
+    interlock: [$fan_relay1, $fan_relay2]
+    restore_mode: always_off           
+    
+remote_receiver:
+  pin: 
+    number: GPIO3
+    #inverted: true
+  dump: raw
+
+binary_sensor:
+  
+  - platform: remote_receiver
+    id: remote_0
+    name: "tasto 0"
+    raw:
+      code: [-207, 104, -103, 104, -104, 103, -104, 207, -104, 103, -104, 104, -103, 104, -104, 103, -104, 105, -102, 104, -725, 104, -311, 103, -518, 104, -933, 103, -104, 104, -725, 104, -932, 104, -207, 207, -519]
+    on_release:
+      then:
+        - switch.turn_off: $fan_relay1
+        - switch.turn_off: $fan_relay2
+        - switch.turn_off: $fan_relay3
+        
+  - platform: remote_receiver
+    id: remote_1  
+    name: "tasto 1"
+    raw:
+      code: [-207, 104, -104, 103, -104, 104, -103, 207, -104, 104, -103, 104, -104, 103, -104, 104, -103, 104, -104, 103, -726, 103, -312, 103, -518, 104, -933, 103, -104, 104, -725, 104, -103, 104, -726, 103, -104, 311, -518]
+    on_release:
+      then:
+        - switch.turn_on: $fan_relay1
+        - switch.turn_off: $fan_relay2
+        - switch.turn_off: $fan_relay3
+        
+  - platform: remote_receiver
+    id: remote_2
+    name: "tasto 2"
+    raw:
+      code: [-208, 103, -104, 104, -103, 104, -103, 208, -103, 104, -104, 103, -104, 104, -103, 104, -104, 103, -104, 103, -726, 104, -310, 104, -518, 104, -933, 103, -104, 104, -725, 104, -207, 104, -622, 103, -416, 102, -415]
+    on_release:
+      then:
+        - switch.turn_on: $fan_relay2
+        - switch.turn_off: $fan_relay1
+        - switch.turn_off: $fan_relay3
+        
+  - platform: remote_receiver
+    id: remote_3
+    name: "tasto 3"
+    raw:
+      code: [-207, 104, -104, 103, -104, 104, -103, 208, -103, 104, -104, 103, -104, 104, -103, 104, -104, 103, -104, 103, -726, 104, -311, 104, -518, 103, -934, 103, -103, 104, -726, 103, -104, 207, -622, 104, -103, 104, -207, 104, -415]
+    on_release:
+      then:
+        - switch.turn_on: $fan_relay3
+        - switch.turn_off: $fan_relay1
+        - switch.turn_off: $fan_relay2
+        
+  - platform: remote_receiver
+    id: remote_light
+    name: "tasto luce"
+    raw:
+      code: [-207, 104, -103, 104, -104, 103, -104, 207, -104, 103, -104, 104, -103, 104, -103, 104, -104, 103, -104, 104, -725, 104, -311, 103, -518, 104, -933, 103, -104, 103, -726, 103, -311, 104, -518, 104, -207, 104, -103, 104, -414]
+    on_release:
+      then:
+        - light.toggle: $ifan_light

@@ -1,34 +1,13 @@
 substitutions:
   devicename: meteo
+  ha_name: "stazione meteo"
+  ha_area: "giardino"
   board: nodemcu-32s
   static_ip: 192.168.178.226
 
 packages:
-  device_base: !include .basicesp32.yaml
-  wifi: !include .wifi.yaml 
-  
-#web_server:
-#  port: 80
-
-### =========================
-### Bluetooth to wifi gateway
-### =========================
-esp32_ble_tracker:
-  max_connections: 3
-  scan_parameters: 
-    active: false #solo se si usano i Mi Flora
-    interval: 320ms #valori di default da usare per stabilità wifi
-    window: 30ms #valori di default da usare per stabilità wifi
-    #software_coexistence: true
-  id: esp32blehub 
-
-### ===============
-### Bluetooth proxy
-### ===============
-bluetooth_proxy:
-  active: true
-  cache_services: true
-  connection_slots: 3  
+  device_base: !include packages/basicesp32.yaml
+  wifi: !include packages/wifi.yaml 
 
 i2c:
   - id: bus_a
@@ -76,36 +55,6 @@ binary_sensor:
     
 sensor:
 
-### ==================
-###  sensori Mi Flora
-### ==================
-
-  - platform: xiaomi_hhccjcy01
-    mac_address: 5C:85:7E:13:90:3A
-    temperature:
-      name: "ortensie temperatura"
-    moisture:
-      name: "ortensie umidità"
-    illuminance:
-      name: "ortensie illuminazione"
-    conductivity:
-      name: "ortensie fertilità"
-    battery_level:
-      name: "ortensie batteria"
-
-  - platform: xiaomi_hhccjcy01
-    mac_address: 5C:85:7E:13:8C:EC
-    temperature:
-      name: "acero temperatura"
-    moisture:
-      name: "acero umidità"
-    illuminance:
-      name: "acero illuminazione"
-    conductivity:
-      name: "acero fertilità"
-    battery_level:
-      name: "acero batteria"
-
 ### ===========================================================  
 ### sensore ms5611 per temperatura ESP e pressione atmosferica
 ### ===========================================================
@@ -113,7 +62,7 @@ sensor:
   - platform: ms5611
     i2c_id: bus_b 
     temperature:
-      name: "temp hardware"
+      name: "temperatura hardware"
       id: temp_device
     pressure:
       name: "Pressione"
@@ -378,42 +327,51 @@ sensor:
     update_interval: 120s
     #model: DHT22
 
-### ===================
-### sensore pluviometro
-### ===================
+### ============================
+### Sensore pluviometro completo
+### ============================
 
-### sensore quantità pioggia istantanea come pulse counter          
+# Sensore per la pioggia istantanea (mm/min)
   - platform: pulse_counter
     pin: 
-      number: GPIO17
+      number: GPIO05 # su ESP32 perfettamente funzionanti usare GPIO17
       mode:
         input: true
-        pullup: true
-    name: 'quantità pioggia'
+        pullup: true      
+      ignore_strapping_warning: true # flase se si usa GPIO17 
+    name: 'pioggia istantanea'
     icon: 'mdi:weather-rainy'
-    id: my_rain
-    update_interval: 60s
+    id: rain
+    device_class: precipitation
+    update_interval: 60s       # ogni 60 secondi
     unit_of_measurement: 'mm/min'
     accuracy_decimals: 2
     filters:
-      - multiply: 0.2794
-    on_value:
-      then:
-        - lambda: |-
-            // Aggiungi la pioggia di questo minuto al totale giornaliero
-            id(daily_rain_total) += (x / 60.0);  
+      - multiply: 0.2794       # ogni impulso corrisponde a 0.2794 mm
 
-### integrazione per calcolare la pioggia caduta nell'ultima ora
+# Integrazione del valore istantaneo su base oraria (mm accumulati in 1 ora)
   - platform: integration
-    name: "pioggia ultima ora"
-    sensor: my_rain
-    #id: rain_per_hour
+    name: "pioggia accumulata ora"
+    sensor: rain 
+    id: rain_integrated_hourly
     time_unit: h
     unit_of_measurement: 'mm'
     icon: 'mdi:weather-rainy'
     accuracy_decimals: 2
 
-### contatore per calcolare la pioggia caduta nelle ultime 24 ore (0-24) 
+# Sensore template per visualizzare la pioggia dell'ultima ora
+  - platform: template
+    name: "pioggia ultima ora"
+    id: rain_hourly
+    unit_of_measurement: 'mm'
+    accuracy_decimals: 2
+    icon: 'mdi:weather-rainy'
+    update_interval: 60s
+    lambda: |-
+      // Mostra il valore accumulato nella variabile aggiornata ogni ora
+      return id(hourly_rain_total);
+
+# Sensore template per visualizzare la pioggia giornaliera (accumulata ogni minuto)  
   - platform: template
     name: "pioggia giornaliera"
     id: rain_daily
@@ -422,25 +380,51 @@ sensor:
     icon: 'mdi:weather-pouring'
     update_interval: 60s
     lambda: |-
-      id(daily_rain_total) += id(my_rain).state / 60.0;
+      // Aggiunge la pioggia dell'ultimo minuto al totale giornaliero
+      // Pioggia istantanea è in mm/min → /60 per avere mm/secondo (ogni minuto)
+      id(daily_rain_total) += id(rain).state / 60.0;
       return id(daily_rain_total);
 
-### azzerare il contatore giornaliero a mezzanotte
+### ====================================
+### Variabili globali (reset automatico)
+### ====================================
+
 globals:
   - id: daily_rain_total
     type: float
+    restore_value: no        # non conserva il valore dopo un riavvio
+    initial_value: '0'       # inizia sempre da zero
+
+  - id: hourly_rain_total
+    type: float
     restore_value: no
-    initial_value: '0'  
+    initial_value: '0'
+
+### =============================================
+### Timer automatici (reset orario e giornaliero)
+### =============================================
 
 time:
-  - platform: sntp
+  - platform: sntp           # sincronizzazione oraria via internet
     on_time:
+      # Azzeramento giornaliero a mezzanotte (00:00:00)
       - seconds: 0
         minutes: 0
         hours: 0
         then:
           - lambda: |-
-               id(daily_rain_total) = 0;          
+              id(daily_rain_total) = 0;
+
+      # Ogni ora (es. 01:00, 02:00...), aggiorna pioggia oraria e resetta l'integratore
+      - seconds: 0
+        minutes: 0
+        then:
+          - lambda: |-
+              // Salva il totale accumulato nell'ultima ora
+              id(hourly_rain_total) = id(rain_integrated_hourly).state;
+
+              // Reset dell'integratore per iniziare una nuova ora
+              id(rain_integrated_hourly).reset();
 
 ### ========================
 ### gestione display ssd1306

@@ -16,19 +16,19 @@ wifi:
 
 captive_portal:
 
-#web_server: #disabled since it need a lot of device memory and can lead problems on 8266
-#  port: 80
-
 text_sensor:
   - platform: wifi_info
     ip_address:
-      name: "$devicename ip address"
+      id: ip_address
+      name: "ip address"
       icon: mdi:ip-network-outline
 
 sensor:
   - platform: wifi_signal
-    name: "$devicename segnale WiFi"
+    id: segnale_wifi
+    name: "segnale WiFi"
     update_interval: 3600s    
   - platform: uptime
-    name: ${devicename} uptime
+    id: tempo_uptime
+    name: "uptime"
 
