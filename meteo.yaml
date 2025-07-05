@@ -172,7 +172,7 @@ sensor:
     filters:
       # - multiply: 3.3 ### settaggio per il Wemos D1 che non legge valori > 1.0V
       # - multiply: 0.0009775171 ### risultato di 1/1023 per avere il valore analogico da 0 a 1024
-    accuracy_decimals: 3 ### IMPORTANT to get resolution for resistance sensor
+    accuracy_decimals: 3 ### IMPORTANTE per avere una risoluzione accurata dei valori delle resistenze
     
 #### Direzione cardinale
 #### settare i valori in base all'installazione! mettere la punta a nord tra 3100 e 3200 ohm
@@ -334,20 +334,20 @@ sensor:
 # Sensore per la pioggia istantanea (mm/min)
   - platform: pulse_counter
     pin: 
-      number: GPIO05 # su ESP32 perfettamente funzionanti usare GPIO17
+      number: GPIO05 #su ESP32 perfettamente funzionanti usare GPIO17
       mode:
         input: true
         pullup: true      
-      ignore_strapping_warning: true # flase se si usa GPIO17 
+      ignore_strapping_warning: true #false se si usa GPIO17 
     name: 'pioggia istantanea'
     icon: 'mdi:weather-rainy'
     id: rain
     device_class: precipitation
-    update_interval: 60s       # ogni 60 secondi
+    update_interval: 60s #ogni 60 secondi
     unit_of_measurement: 'mm/min'
     accuracy_decimals: 2
     filters:
-      - multiply: 0.2794       # ogni impulso corrisponde a 0.2794 mm
+      - multiply: 0.2794 #ogni impulso corrisponde a 0.2794 mm
 
 # Integrazione del valore istantaneo su base oraria (mm accumulati in 1 ora)
   - platform: integration
@@ -392,8 +392,8 @@ sensor:
 globals:
   - id: daily_rain_total
     type: float
-    restore_value: no        # non conserva il valore dopo un riavvio
-    initial_value: '0'       # inizia sempre da zero
+    restore_value: no # non conserva il valore dopo un riavvio
+    initial_value: '0' # inizia sempre da zero
 
   - id: hourly_rain_total
     type: float
@@ -405,9 +405,9 @@ globals:
 ### =============================================
 
 time:
-  - platform: sntp           # sincronizzazione oraria via internet
+  - platform: sntp # sincronizzazione oraria via internet
     on_time:
-      # Azzeramento giornaliero a mezzanotte (00:00:00)
+      #Azzeramento giornaliero a mezzanotte (00:00:00)
       - seconds: 0
         minutes: 0
         hours: 0
