@@ -31,7 +31,7 @@ power is provided by 12Vdc LVPS (the white one) for rain sensor and ESP32 power 
 
 ### _external hardware:_
 
-> ![assembly](https://user-images.githubusercontent.com/61212989/205520572-8e8b52ff-2852-4d28-9d31-e012adb5b7f9.png)
+> ![stazione-meteorologica_new](https://github.com/user-attachments/assets/6ac7ac4a-36cf-4c16-9ef7-d04747412f80)
 
 ### _Home Assistant card:_
 
