@@ -3,7 +3,7 @@ substitutions:
   ha_name: "stazione meteo"
   ha_area: "giardino"
   board: nodemcu-32s
-  static_ip: 192.168.178.226
+  #static_ip: 192.168.178.226
 
 packages:
   device_base: !include packages/basicesp32.yaml
@@ -93,6 +93,7 @@ sensor:
     #- multiply: 1.224 
     - multiply: 0.04
     - debounce: 0.1s
+    internal: true
 
 # Velocità media su 2 minuti (moving average)
   - platform: copy
@@ -335,6 +336,7 @@ sensor:
   - platform: pulse_counter
     pin: 
       number: GPIO05 #su ESP32 perfettamente funzionanti usare GPIO17
+      inverted: true
       mode:
         input: true
         pullup: true      
@@ -343,11 +345,12 @@ sensor:
     icon: 'mdi:weather-rainy'
     id: rain
     device_class: precipitation
-    update_interval: 60s #ogni 60 secondi
+    #update_interval: 10s #default ogni 60 secondi 
     unit_of_measurement: 'mm/min'
     accuracy_decimals: 2
     filters:
       - multiply: 0.2794 #ogni impulso corrisponde a 0.2794 mm
+    internal: true  
 
 # Integrazione del valore istantaneo su base oraria (mm accumulati in 1 ora)
   - platform: integration
@@ -355,7 +358,7 @@ sensor:
     sensor: rain 
     id: rain_integrated_hourly
     time_unit: h
-    unit_of_measurement: 'mm'
+    unit_of_measurement: 'mm/h'
     icon: 'mdi:weather-rainy'
     accuracy_decimals: 2
 
@@ -363,7 +366,7 @@ sensor:
   - platform: template
     name: "pioggia ultima ora"
     id: rain_hourly
-    unit_of_measurement: 'mm'
+    unit_of_measurement: 'mm/h'
     accuracy_decimals: 2
     icon: 'mdi:weather-rainy'
     update_interval: 60s
