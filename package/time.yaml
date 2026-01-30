@@ -1,0 +1,6 @@
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Rome
+    servers:
+     - 192.168.178.1

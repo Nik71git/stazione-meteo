@@ -2,8 +2,7 @@ substitutions:
   devicename: meteo
   ha_name: "stazione meteo"
   ha_area: "giardino"
-  board: nodemcu-32s
-  #static_ip: 192.168.178.226
+  board: nodemcu-32s  
 
 packages:
   device_base: !include packages/basicesp32.yaml
@@ -409,6 +408,10 @@ globals:
 
 time:
   - platform: sntp # sincronizzazione oraria via internet
+    id: sntp_time
+    timezone: Europe/Rome
+    servers:
+     - 192.168.178.1 
     on_time:
       #Azzeramento giornaliero a mezzanotte (00:00:00)
       - seconds: 0
@@ -417,7 +420,6 @@ time:
         then:
           - lambda: |-
               id(daily_rain_total) = 0;
-
       # Ogni ora (es. 01:00, 02:00...), aggiorna pioggia oraria e resetta l'integratore
       - seconds: 0
         minutes: 0
@@ -425,7 +427,6 @@ time:
           - lambda: |-
               // Salva il totale accumulato nell'ultima ora
               id(hourly_rain_total) = id(rain_integrated_hourly).state;
-
               // Reset dell'integratore per iniziare una nuova ora
               id(rain_integrated_hourly).reset();
 
